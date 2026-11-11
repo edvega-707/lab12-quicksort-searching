@@ -1,6 +1,6 @@
 /*
  * Course: COEN 2220 - Programming 2
- * Name: Eduardo D. Vega Rodriguez 
+ * Name: Eduardo D. Vega Rodriguez
  * Lab: Lab 12 - Quicksort and Searching
  * Description: Preserve parcel arrival records and search a ready-only view
  * Due date: 11/10/2026
@@ -27,6 +27,7 @@ int binaryFindReady(Parcel *view[], int count, int target);
 int main()
 {
     const int CAPACITY = 8;
+
     Parcel parcels[CAPACITY] = {
         {640, "L-4", true},  {215, "L-8", false},
         {580, "L-2", true},  {325, "L-6", true},
@@ -58,9 +59,11 @@ int main()
     displayParcels(parcels, CAPACITY);
 
     // --- STEP D1: Activate after completing the search function ---
-    /*
+
     int target;
+
     cout << "Enter a pickup code: ";
+
     if (!(cin >> target))
     {
         cout << "Invalid code input." << endl;
@@ -78,15 +81,16 @@ int main()
         cout << "Pickup code " << readyView[position]->pickupCode
              << " | Locker: " << readyView[position]->locker << endl;
     }
-    */
 
     return 0;
 }
 
 // ===== Resolve only these TODOs now (Part C) =====
+
 void swapParcelPointers(Parcel *&left, Parcel *&right)
 {
     // TODO (Part C): Exchange the two borrowed addresses without changing objects.
+
     Parcel *saved = left; // Save the address of the first parcel.
     left = right;         // Move the second address to the first position.
     right = saved;        // Move the saved address to the second position.
@@ -95,6 +99,7 @@ void swapParcelPointers(Parcel *&left, Parcel *&right)
 int partitionReady(Parcel *view[], int first, int last)
 {
     // TODO (Part C): Select the central record and partition by ascending pickupCode.
+
     int middle = first + (last - first) / 2;
 
     // Move the middle pointer to the first position.
@@ -107,6 +112,7 @@ int partitionReady(Parcel *view[], int first, int last)
     int boundary = first;
 
     // TODO (Part C): Follow the lecture's pivot-at-first scheme and return its final index.
+
     for (int scan = first + 1; scan <= last; scan++)
     {
         // Check if the current parcel code is smaller than the pivot.
@@ -146,10 +152,42 @@ void quickSortReady(Parcel *view[], int first, int last)
 }
 
 // ===== Resolve this TODO later (Part D) =====
+
 int binaryFindReady(Parcel *view[], int count, int target)
 {
     // TODO (Part D): Implement iterative binary search by pickupCode on the sorted view.
-    return -1; // Temporary placeholder; replace with the complete search.
+
+    // Start searching from the first valid position.
+    int first = 0;
+
+    // Use count to find the last valid position.
+    int last = count - 1;
+
+    // Continue searching while the range is not empty.
+    while (first <= last)
+    {
+        // Find the middle position of the current range.
+        int middle = first + (last - first) / 2;
+
+        // Check if the middle parcel matches the target.
+        if (view[middle]->pickupCode == target)
+        {
+            return middle; // Return the position in readyView.
+        }
+
+        // If the middle code is smaller, search the right side.
+        if (view[middle]->pickupCode < target)
+        {
+            first = middle + 1;
+        }
+        else
+        {
+            // If the middle code is greater, search the left side.
+            last = middle - 1;
+        }
+    }
+
+    return -1; // Return -1 when the code is not found.
 }
 
 void displayParcels(const Parcel parcels[], int count)
@@ -260,12 +298,87 @@ void displayReady(Parcel *view[], int count)
  * D3 - Search positions and absence
  * Trace code 505 and the absent ready-view code 460. Give the checked ranges
  * and explain why a view index cannot be used as an index into parcels.
+ *
  * Answer:
+ * The sorted readyView contains these codes:
+ * 190, 325, 505, 580, 640, 710.
+ *
+ * Searching for code 505:
+ *
+ * First step:
+ * first = 0, last = 5, middle = 2.
+ * The inspected code is 505.
+ * Since the code matches, the function returns index 2.
+ * The program displays locker L-7.
+ *
+ * Searching for code 460:
+ *
+ * First step:
+ * first = 0, last = 5, middle = 2.
+ * The inspected code is 505.
+ * Since 460 is smaller than 505, the next range is 0 to 1.
+ *
+ * Second step:
+ * first = 0, last = 1, middle = 0.
+ * The inspected code is 190.
+ * Since 460 is greater than 190, the next range is 1 to 1.
+ *
+ * Third step:
+ * first = 1, last = 1, middle = 1.
+ * The inspected code is 325.
+ * Since 460 is greater than 325, the next range is 2 to 1.
+ *
+ * Now first = 2 and last = 1.
+ * Since first is greater than last, the loop stops.
+ * The function returns -1 because code 460 is not
+ * available in the ready view.
+ *
+ * The program displays "No ready parcel with that code."
+ *
+ * A readyView index cannot be used directly as an index
+ * into parcels because both arrays have different orders.
+ * readyView only contains pointers to ready parcels,
+ * while parcels keeps all records in their arrival order.
+ *
+ * For example, code 505 is at index 2 in readyView,
+ * but its original position in parcels is index 7.
+ * We must use readyView[position] to access the correct parcel.
  *
  * D4 - Time and auxiliary space
  * For n ready parcels and q queries, compare sorting once then using binary
  * search with scanning the unsorted ready view for every query. Give worst-case
  * bounds for this quicksort, balanced-partition bounds, and iterative-search
  * auxiliary space. Distinguish the view storage from recursive-call storage.
+ *
  * Answer:
+ * Sorting the ready view once allows the program to
+ * search for parcel codes faster when there are many queries.
+ *
+ * With balanced partitions, quicksort takes O(n log n)
+ * time to sort the ready parcels.
+ * After sorting, each binary search takes O(log n) time.
+ *
+ * For q queries, the total time with balanced partitions
+ * is O(n log n + q log n).
+ *
+ * If we use linear search without sorting, each search
+ * can take O(n) time. For q queries, the total is O(qn).
+ *
+ * However, quicksort does not always divide the data evenly.
+ * In the worst case, this quicksort takes O(n^2) time.
+ * Choosing the middle position does not guarantee
+ * balanced partitions.
+ *
+ * The readyView array uses O(n) space to store the
+ * pointers to the ready parcels.
+ *
+ * Quicksort also uses extra memory for recursive calls.
+ * With balanced partitions, it uses O(log n) stack space.
+ * In the worst case, it can use O(n) stack space.
+ *
+ * Iterative binary search only uses a few variables,
+ * so its auxiliary space is O(1).
+ *
+ * The view storage is separate from the memory used
+ * by recursive calls during sorting.
  */
